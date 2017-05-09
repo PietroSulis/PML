@@ -1,4 +1,4 @@
-# PML
+# PML project course    ----> result is visible in html format here:  https://pietrosulis.github.io/PML/PML_Project.html
 Coursera Practical Machine Learning Course project
 
 Background
