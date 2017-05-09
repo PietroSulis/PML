@@ -1,0 +1,90 @@
+---
+title: "PML_Project_report"
+author: "pietrosulis"
+date: "May 09, 2017"
+output:
+  html_document:
+    toc: yes
+---
+
+```{r prep, echo = F, message = F}
+library(caret)
+library(randomForest)
+```
+
+### Preprocessing 
+* Load data           
+* Let's clean the data by removing, first, the near zero features, then the features with over 95% of missing (NA) values                 
+* Data partitioning
+
+```{r data, eval = F}
+# Data loading
+trainDF<- read.csv("./data/pml-training.csv")
+testDF<- read.csv("./data/pml-testing.csv")
+# remove near zero covariates
+nzv<-nearZeroVar(trainDF)
+trainDF<-trainDF[,-nzv]
+testDF<-testDF[,-nzv
+# remove variables with more than 95% missing values (NA)
+NAs <- sapply(trainDF, function(x) mean(is.na(x))) > 0.95
+trainDF <- trainDF[, NAs==F]
+testDF <- testDF[, NAs==F]
+# list remaining variables to makle sure that the output is still present: the first 5 of them are plain noise, remove them
+names(trainDF)
+trainDF <- trainDF[, -(1:5)]
+testDF <- testDF[, -(1:5)]
+# Data partitioning
+intrain <- createDataPartition(y=trainDF$classe, p=0.7, list=F)
+trainDF_train<-trainDF[intrain,]
+trainDF_test<-trainDF[-intrain,]
+
+Let's try to make prediction with Random Forest and Boosting models.         
+
+### Random Forest model   
+* We will use 5-fold cross validation,     
+* validate the model and compute the out of sample error.            
+
+```{r rf, eval = F}
+set.seed(123)
+mymodel_RF<-train(classe ~ ., data = trainDF_train, method="rf", trControl=trainControl(method = "cv", number = 5, verboseIter = F)) 
+mymodel_RF
+```
+
+With only 12 wrong predictions we achieved an accuracy of 0.998 so the out of sample error is about 0.002.                     
+
+### Boosting model
+* We will use 10-fold (default value) cross validation,     
+* validate the model and compute the out of sample error.            
+
+```{r boosting, eval = F}
+set.seed(123)
+mymodel_B <- train(classe ~ ., method = "gbm", data = trainDF_train, verbose = F, trControl = trainControl(method = "cv"))
+mymodel_B
+```
+
+the accuracy of 0.9878 is still quite good but lower than before because of 72 wrong predictions, therefore with an higher OOSe of about 0.012.
+
+### Predictions   
+* The random Forest model achieved the best results and we will apply it to the real test data (without the column 54 -problem_id- ) to predict the "classe" each of the 20 observation would belong to and save the data in single files using a function developed for this purpose (write_files).         
+* The "classe" variable defines 5 levels.            
+* The final prediction data needs to be converted into a character vector to be properly parsed to generate the output for the course grader.     
+
+```{r prediction, message = F}
+levels(trainDF[,"classe"])
+names(testDF[54])
+predictions _FINAL <- predict(mymodel_RF, testDF[, -54])
+predictions _FINAL
+```
+```{r results, eval = F}
+predictions_FINAL <- as.character(predictions _FINAL)
+ 
+write_files = function(x){
+  n = length(x)
+  for(i in 1:n){
+    filename = paste0("./predictions/problem_id_", i, ".txt")
+    write.table(x[i], file = filename, quote = FALSE, row.names = FALSE, col.names = FALSE)
+  }
+}
+write_files(predictions _FINAL)
+```
+
