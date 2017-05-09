@@ -37,7 +37,7 @@ testDF <- testDF[, -(1:5)]
 intrain <- createDataPartition(y=trainDF$classe, p=0.7, list=F)
 trainDF_train<-trainDF[intrain,]
 trainDF_test<-trainDF[-intrain,]
-
+```
 Let's try to make prediction with Random Forest and Boosting models.         
 
 ### Random Forest model   
